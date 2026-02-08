@@ -602,9 +602,15 @@ def animer_champ_temperature(
     return ani
 
 def plot_champ_temperature(mesh_xs, mesh_ys, mesh_elems, Ts,
-                           cmap_name="plasma", niveaux=50,):
+                           cmap_name="plasma", niveaux=50,
+                           Tmin=None, Tmax=None):
+
     triang = tri.Triangulation(mesh_xs, mesh_ys, mesh_elems)
-    T_min, T_max = np.min(Ts), np.max(Ts)
+
+    # Valeurs min/max du champ si non fournies
+    T_min = Tmin if Tmin is not None else np.min(Ts)
+    T_max = Tmax if Tmax is not None else np.max(Ts)
+
     cmap = cm.get_cmap(cmap_name)
     norm = mcolors.Normalize(vmin=T_min, vmax=T_max)
 
@@ -616,6 +622,7 @@ def plot_champ_temperature(mesh_xs, mesh_ys, mesh_elems, Ts,
     ax.set_aspect("equal")
     ax.set_title("Champ de température")
     plt.show()
+
 
 
 ##

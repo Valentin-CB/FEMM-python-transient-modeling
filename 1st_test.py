@@ -16,8 +16,12 @@ hi_probdef("millimeters", "planar", 1e-8, 1, 30)
 # -----------------------------
 # Matériaux
 # -----------------------------
-hi_addmaterial("Acier", 45, 45, 0, 460*7800/1e6)       # Cp*rho en MJ/m3/K
+hi_addmaterial("Acier", 45, 45, 0, 460*7800/1e6)
+hi_addmaterial("Bois", 0.25, 0.25, 0, 460*7800/1e6)
 hi_addmaterial("Aluminium", 205, 205, 0, 900*2700/1e6)
+hi_addmaterial("Verre_Cellules", 16, 16, 0, 1800*730/1e6)
+hi_addmaterial("EVA_Backsheet", 0.15, 0.15, 0, 1300*920/1e6)
+hi_addmaterial("Cadre_Alu", 205, 205, 0, 2700*900/1e6)
 
 # -----------------------------
 # Conditions limites
@@ -31,16 +35,20 @@ hi_addboundprop("sol_40C", 0, 40+273, 0, 0, 0, 0)  # Dirichlet : température im
 # -----------------------------
 # Géométrie
 # -----------------------------
-# Plaque acier :
-hi_addRectangle(0, 0, 100, 5, "Aluminium")
-# Tige aluminium
-hi_addRectangle(45, 0, 50, -50, "Acier")
+# Verre + cellules : 5 ≤ y ≤ 10
+hi_addRectangle(0, 2, 100, 5, "Verre_Cellules")
+# EVA + backsheet : 10 ≤ y ≤ 12
+hi_addRectangle(0, 5, 100, 7, "EVA_Backsheet")
+# Plaque aluminium
+hi_addRectangle(0, 0, 100, 2, "Aluminium")
+# Tige acier
+hi_addRectangle(48, 0, 52, -50, "Bois")
 
 # -----------------------------
 # Application des conditions limites
 # -----------------------------
 # Face supérieure de la plaque → flux solaire + convection + rayonnement
-hi_setbound(50, 5, "air_ext")
+hi_setbound(50, 7, "air_ext")
 # Face inférieure de la tige aluminium → contact sol T=40°C
 hi_setbound(50, -50, "sol_40C")
 
@@ -59,7 +67,7 @@ elem_materials = assign_elements_to_material(
     xs, ys, elems, elem_values,
     femm_data["labels"]
 )
-plot_champ_temperature(xs, ys, elems, Ts-273)
+plot_champ_temperature(xs, ys, elems, Ts-273, Tmin=0)
 
 fig, ax = plt.subplots(figsize=(8, 8))
 plot_labels_on_mesh(
