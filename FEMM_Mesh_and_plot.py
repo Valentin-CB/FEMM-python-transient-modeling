@@ -10,6 +10,25 @@ def hi_setbound(x, y, boundName):
     hi_setsegmentprop(boundName, 0, 1, 0, 0, "<None>")
     hi_clearselected()
 
+def hi_addRectangle(x0, y0, x1, y1, blocName="<None>", group=0):
+    hi_drawrectangle(x0, y0, x1, y1)
+    if blocName :
+        hi_addLabel(x0/2+x1/2, y0/2+y1/2, blocName, group)
+
+def hi_addLabel(x, y, blocName="<None>", group=0):
+    hi_addblocklabel(x, y)
+    hi_selectlabel(x, y)
+    hi_setblockprop(blocName, 1, 0, group)
+    hi_clearselected()
+
+def solve_feh_file(feh_path):
+    femm.openfemm()
+    femm.opendocument(feh_path)
+    femm.hi_analyze()
+    femm.hi_loadsolution()
+    femm.closefemm()
+
+
 def read_femm_problem(file_path):
     """
     Lit un fichier FEMM thermique et extrait les données structurées :
