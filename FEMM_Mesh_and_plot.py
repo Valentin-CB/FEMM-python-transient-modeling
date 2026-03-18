@@ -602,29 +602,101 @@ def animer_champ_temperature(
     return ani
 
 def plot_champ_temperature(mesh_xs, mesh_ys, mesh_elems, Ts,
-                           cmap_name="plasma", niveaux=50,
-                           Tmin=None, Tmax=None):
+                           cmap_name="plasma", niveaux=50, ax=None, cursor=False):
+
+    import mplcursors
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 8))
+        show = True
+    else:
+        fig = ax.figure
+        show = False
 
     triang = tri.Triangulation(mesh_xs, mesh_ys, mesh_elems)
+    T_min, T_max = np.min(Ts), np.max(Ts)
 
-    # Valeurs min/max du champ si non fournies
-    T_min = Tmin if Tmin is not None else np.min(Ts)
-    T_max = Tmax if Tmax is not None else np.max(Ts)
+    tcf = ax.tricontourf(
+        triang, Ts, niveaux,
+        cmap=cmap_name,
+        vmin=T_min,
+        vmax=T_max
+    )
 
-    cmap = cm.get_cmap(cmap_name)
-    norm = mcolors.Normalize(vmin=T_min, vmax=T_max)
+    cbar = fig.colorbar(tcf, ax=ax)
+    cbar.set_label("Température (°C)")
 
-    fig, ax = plt.subplots(figsize=(8, 8))
-    tcf = ax.tricontourf(triang, Ts, niveaux, cmap=cmap, vmin=T_min, vmax=T_max)
-    fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, label="Température (°C)")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_aspect("equal")
     ax.set_title("Champ de température")
+
+    if cursor:
+        # 🔥 Ajout du tooltip
+        cursor = mplcursors.cursor(tcf, hover=True)
+
+        @cursor.connect("add")
+        def on_add(sel):
+            x, y = sel.target
+            # interpolation simple au noeud le plus proche
+            idx = np.argmin((mesh_xs - x)**2 + (mesh_ys - y)**2)
+            sel.annotation.set_text(
+                f"x = {x:.3f}\n"
+                f"y = {y:.3f}\n"
+                f"T = {Ts[idx]:.2f} °C"
+            )
+
+    if show:
+        plt.show()
+
+
+if __name__ == '__main__':
+    fileFEH = r"C:\Users\valen\FEMM\2nd_model-10.FEH"
+
+
+    file_path = fileFEH.strip('.FEH') + '.anh'
+
+    femm_data = read_femm_problem(fileFEH)
+    xs, ys, Ts, elems, elem_values = read_ans_with_mesh(file_path)
+    # Association matériaux → éléments
+    elem_materials = assign_elements_to_material(
+        xs, ys, elems, elem_values,
+        femm_data["labels"]
+    )
+
+
+    # Création de la figure et des axes
+    fig, ax_right = plt.subplots(figsize=(8, 8))
+
+    # # Tracé du maillage
+    # plot_labels_on_mesh(
+    #     ax_right, xs, ys, elems, elem_materials,
+    #     femm_data["labels"], femm_data["blocks"],
+    #     material_colors={
+    #         1:'#777777', 2:'#6AF261', 4:'#3E55EF',
+    #         5:'#DE9709', 6:'#EEEEEE'
+    #     },
+    #     edgecolor=None,
+    #     linewidth=0.01
+    # )
+
+    # Tracé des boundaries
+    plot_segments_by_boundary(
+        ax_right, femm_data,
+        boundary_colors={
+            1: '#27CCF5', 2: '#272EF5',
+            3: 'black', 4: '#2AA818', 5: '#19670F'
+        }
+    )
+
+
+    # Réglages d'affichage
+    ax_right.set_aspect('equal')   # garde les proportions du maillage
+    ax_right.set_xlabel("x")
+    ax_right.set_ylabel("y")
+
+    # Affichage
+    plt.tight_layout()
     plt.show()
-
-
-
-##
 
 
