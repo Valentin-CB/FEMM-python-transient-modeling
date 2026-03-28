@@ -32,6 +32,7 @@ hi_addmaterial("Cadre_Alu", 205, 205, 0, 2700*900/1e6)
 hi_addboundprop("air_ext", 3, 0, -900, 40+273, 8, 0.8)
 hi_addboundprop("sol_40C", 0, 40+273, 0, 0, 0, 0)  # Dirichlet : température imposée
 
+
 # -----------------------------
 # Géométrie
 # -----------------------------
@@ -57,27 +58,13 @@ hi_setbound(50, -50, "sol_40C")
 # -----------------------------
 hi_zoomnatural()
 
+
+hi_deleteboundprop("air_ext")
+x = ("air_ext", 3, 40, -900, 40+273, 8, 0.8, 73)
+hi_addboundprop(*x)
+
+
+
 hi_saveas(f"{fileName}.FEH")
 hi_analyze()
 hi_loadsolution()
-
-xs, ys, Ts, elems, elem_values = read_ans_with_mesh(f'{fileName}.anh')
-femm_data = read_femm_problem(f'{fileName}.anh')
-elem_materials = assign_elements_to_material(
-    xs, ys, elems, elem_values,
-    femm_data["labels"]
-)
-plot_champ_temperature(xs, ys, elems, Ts-273,)
-
-fig, ax = plt.subplots(figsize=(8, 8))
-plot_labels_on_mesh(
-    ax, xs, ys, elems, elem_materials,
-    femm_data["labels"], femm_data["blocks"],
-    material_colors={
-        1:'#777777', 2:'#6AF261', 4:'#3E55EF',
-        5:'#DE9709', 6:'#EEEEEE'
-    },
-    edgecolor=None,
-    linewidth=0.01
-)
-plt.show()
